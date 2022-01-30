@@ -1,18 +1,33 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:countdown_timer/test_package.dart';
+import 'package:countdown_timer/timer_widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const MyApp());
+enum ScreenType {
+  mobile, tablet, desktop
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+ScreenType getScreenType(Size size) {
+  if (size.width > 768) {
+    return ScreenType.desktop;
+  } else if (size.width > 480) {
+    return ScreenType.tablet;
+  } else {
+    return ScreenType.mobile;
+  }
+}
+
+void main() {
+  runApp(const CountdownTimerApp());
+}
+
+class CountdownTimerApp extends StatelessWidget {
+  const CountdownTimerApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,581 +35,367 @@ class MyApp extends StatelessWidget {
       title: 'Countdown Timer',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+      ),
+      darkTheme: ThemeData(
+        primarySwatch: Colors.blue,
         brightness: Brightness.dark,
       ),
-      home: const MyHomePage(title: 'Timer Page'),
+      home: const CountdownTimerHomePage(title: 'Timer Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+class CountdownTimerHomePage extends StatefulWidget {
+  const CountdownTimerHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<CountdownTimerHomePage> createState() => _CountdownTimerHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with SingleTickerProviderStateMixin {
+  static const selectedDurationLabel = 'selectedDuration';
+  static const showMillisecondsLabel = 'showMilliseconds';
+  static const maxDuration = Duration(hours: 999, minutes: 59, seconds: 59);
+  static const spacer = SizedBox(height: 12);
   late final Future<SharedPreferences> _data;
-  // late SharedPreferences data;
-  late bool showMilliseconds;
-  late double userHours;
-  late double userMins;
-  late double userSecs;
-  late double _counter = getUserTime();
-  Timer? _timer;
+  late final Ticker _ticker;
+  late Duration _selectedDuration;
+  // Test for accuracy of Ticker
+  // DateTime? startTime;
+  Duration _elapsedTime = Duration.zero;
+  Duration _previousElapsedTime = Duration.zero;
+  late bool _showMilliseconds;
   late TextEditingController _hoursController;
   late TextEditingController _minsController;
   late TextEditingController _secsController;
 
-  Future<void> loadFutures() async {
-    showMilliseconds = await _data.then((value) => value.getBool('showMilliseconds') ?? false);
-    userHours =  await _data.then((value) => value.getDouble('userHours') ?? 0);
-    userMins = await _data.then((value) => value.getDouble('userMins') ?? 5);
-    userSecs = await _data.then((value) => value.getDouble('userSecs') ?? 0);
-  }
-
   Future<void> initData() async {
-    await loadFutures();
-    _hoursController = TextEditingController(text: userHours.toStringAsFixed(0));
-    _minsController = TextEditingController(text: userMins.toStringAsFixed(0));
-    _secsController = TextEditingController(text: userSecs.toStringAsFixed(0));
-
-  }
-
-  bool allDataInitiated() {
-    try {
-      // ignore: unused_local_variable
-      Object? testVar;
-      testVar = showMilliseconds;
-      testVar = userHours;
-      testVar = userMins;
-      testVar = userSecs;
-      testVar = null;
-      return true;
-    } catch (error) {
-      return false;
-    }
+    _showMilliseconds = await _data.then((value) => value.getBool(showMillisecondsLabel) ?? false);
+    String durationString = await _data.then((value) => value.getString(selectedDurationLabel) ?? (Duration.millisecondsPerMinute * 5).toString());
+    _selectedDuration = Duration(milliseconds: int.parse(durationString));
+    _hoursController = TextEditingController(text: _selectedDuration.inHours.toString());
+    _minsController = TextEditingController(text: (_selectedDuration.inMinutes - (_selectedDuration.inHours * Duration.minutesPerHour)).toString());
+    _secsController = TextEditingController(text: (_selectedDuration.inSeconds - (_selectedDuration.inMinutes * Duration.secondsPerMinute)).toString());
   }
 
   @override
   void initState() {
     super.initState();
     _data = SharedPreferences.getInstance();
+    _ticker = createTicker((elapsed) {
+      setState(() {
+        _elapsedTime = elapsed;
+        if (_previousElapsedTime + _elapsedTime >= _selectedDuration) {
+          stopTimer();
+        }
+      });
+    });
     initData();
   }
 
-  @override
-  void dispose() {
-    _hoursController.dispose();
-    _minsController.dispose();
-    _secsController.dispose();
-    super.dispose();
-  }
-
-  double getUserTime() {
-    return (userHours * (60 * 60)) + (userMins * 60) + userSecs;
-  }
-
-  void saveTime(int type) {
-    switch (type) {
-      case 0:
-        _data.then((value) => value.setBool('showMilliseconds', showMilliseconds));
-        break;
-      case 1:
-        _data.then((value) => value.setDouble('userHours', userHours));
-        break;
-      case 2:
-        _data.then((value) => value.setDouble('userMins', userMins));
-        break;
-      case 3:
-        _data.then((value) => value.setDouble('userSecs', userSecs));
-        break;
-      default:
-        throw Error();
-    }
-  }
-
   void startTimer() {
-    _timer = Timer.periodic(const Duration(milliseconds: 10), (_) {
-      if (_counter >= 0.01) {
-        setState(() => _counter = _counter - 0.01);
-      } else {
-        pauseTimer();
-      }
+    setState(() {
+      _ticker.start();
+      // Test for accuracy of Ticker
+      // startTime = DateTime.now();
     });
   }
 
-  void pauseTimer() {
-    if (_timer?.isActive ?? false) {
-      setState(() => _timer!.cancel());
-    }
+  void stopTimer() {
+    setState(() {
+      _ticker.stop();
+      // Test for accuracy of Ticker
+      // print("Difference:  " + (DateTime.now().difference(startTime!).inMilliseconds - (_previousElapsedTime + _elapsedTime).inMilliseconds).toString());
+      _previousElapsedTime += _elapsedTime;
+      _elapsedTime = Duration.zero;
+    });
   }
 
   void resetTimer() {
-    pauseTimer();
-    setState(() => _counter = getUserTime());
+    setState(() {
+      if (_ticker.isActive) stopTimer();
+      _elapsedTime = Duration.zero;
+      _previousElapsedTime = Duration.zero;
+    });
   }
 
-  String printTime(double timeVal, bool printMS) {
-    int h, m, s, ms;
-
-    h = timeVal ~/ 3600;
-    m = ((timeVal - h * 3600)) ~/ 60;
-    s = (timeVal - (h * 3600) - (m * 60)) ~/ 1;
-    ms = ((timeVal - (h * 3600) - (m * 60) - s) * 100) ~/ 1;
-
-    String msString = (printMS) ? '.' + intToDoubleDigit(ms) : '';
-
-    if (h > 0) {
-      return '$h:' + intToDoubleDigit(m) + ':' + intToDoubleDigit(s) + msString;
-    } else if (m > 0) {
-      return '$m:' + intToDoubleDigit(s) + msString;
-    } else {
-      return '$s' + msString;
-    }
+  void restartTimer() {
+    setState(() {
+      resetTimer();
+      startTimer();
+    });
   }
 
-  String intToDoubleDigit(int val) {
-    if (val.toString().length < 2) {
-      return '0$val';
-    } else {
-      return '$val';
-    }
+  void saveTime({required String label, required Duration toSave}) {
+    _data.then((value) => value.setString(label, toSave.inMilliseconds.toString()));
   }
 
-  Widget buildTime(BuildContext context) {
-    // print((getUserTime() < 1 || _counter < 0.01) ? 0 : _counter / getUserTime());
-    // print('Percent: ' + (_counter / getUserTime()).toString());
-    return AnimatedCircleProgressBar(
-      value: (getUserTime() < 1 || _counter < 0.01) ? 0 : (_counter == getUserTime()) ? 1 : (_counter / getUserTime()),
-      animationCurve: Curves.linear,
-      animationDuration: const Duration(milliseconds: 1),
-      fillColor: Colors.deepPurple,
-      backgroundColor: Colors.white38,
-      counterClockwise: true,
-      child: FractionallySizedBox(
-        widthFactor: 0.6,
-        heightFactor: 0.6,
-        child: FittedBox(
-          child: Text(
-            printTime(_counter, showMilliseconds),
-          ),
-          fit: BoxFit.contain,
-        ),
-      ),
-    );
-  }
-
-  Widget buildSidebar(BuildContext context) {
-    MediaQueryData _mediaQueryData = MediaQuery.of(context);
-    double _textFieldWidth = (_mediaQueryData.size.width < 500) ? 25 : _mediaQueryData.size.width * 0.05;
-    double _iconWidth = (_textFieldWidth > 50) ? 30 : _textFieldWidth * 0.4;
-    final isRunning = (_timer == null) ? false : _timer!.isActive;
-    final playButton = IconButton(
-      constraints: BoxConstraints(minWidth: _textFieldWidth),
-      iconSize: _iconWidth,
-      icon: const Icon(
-        Icons.play_arrow,
-      ),
-      color: Theme.of(context).textTheme.bodyText1?.color ?? Colors.white,
-      onPressed: () {
-        startTimer();
-      },
-    );
-    final pauseButton = IconButton(
-      constraints: BoxConstraints(minWidth: _textFieldWidth),
-      iconSize: _iconWidth,
-      icon: const Icon(
-        Icons.pause,
-      ),
-      color: Theme.of(context).textTheme.bodyText1?.color ?? Colors.white,
-      onPressed: () {
-        pauseTimer();
-      },
-    );
-    final resetButton = IconButton(
-      constraints: BoxConstraints(minWidth: _textFieldWidth),
-      iconSize: _iconWidth,
-      icon: const Icon(
-        Icons.stop,
-      ),
-      color: Theme.of(context).errorColor,
-      onPressed: () {
-        resetTimer();
-      }
-    );
-    final restartButton = IconButton(
-      constraints: BoxConstraints(minWidth: _textFieldWidth),
-      iconSize: _iconWidth,
-      icon: const Icon(
-        Icons.replay,
-      ),
-      color: Theme.of(context).textTheme.bodyText1?.color ?? Colors.white,
-      onPressed: () {
-        resetTimer();
-        startTimer();
-      }
-    );
-
-    List<Widget> settings = [];
-
-    // Add the first button with soft interactions (play, pause, restart)
-    if (isRunning) {
-      settings.add(pauseButton);
-    } else if (_counter < 0.01) {
-      settings.add(restartButton);
-    } else {
-      settings.add(playButton);
-    }
-
-    // Add the stop button
-    if (_counter != getUserTime()) settings.add(resetButton);
-
-    settings.add(
-      Expanded(child: Container()),
-    );
-
-    // Add time number controls
-    settings.add(
-      Padding(
-        padding: const EdgeInsets.fromLTRB(0, 15, 0, 5),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: const [
-            Text('Hours'),
-          ],
-        ),
-      )
-    );
-
-    settings.add(
-      RawKeyboardListener(
-        onKey: (RawKeyEvent event) {
-          if (event.runtimeType == RawKeyDownEvent) {
-            bool isChanged = false;
-            setState(() {
-              if (event.logicalKey == LogicalKeyboardKey.arrowUp && userHours < 999) {
-                setState(() {
-                  userHours += 1;
-                });
-                isChanged = true;
-              } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && userHours > 0) {
-                setState(() {
-                  userHours -= 1;
-                });
-                isChanged = true;
-              }
-              if (isChanged) {
-                saveTime(1);
-                _hoursController.value = TextEditingValue(text: userHours.toStringAsFixed(0));
-                _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
-                resetTimer();
-              }
-            });
-          }
-        },
-        focusNode: FocusNode(),
-        child: SizedBox(
-          width: _textFieldWidth,
-          child: TextFormField(
-            controller: _hoursController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              // labelText: 'Hours',
-            ),
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(3),
-            ],
-            onTap: () {
-              _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
-            },
-            onChanged: (newVal) {
-              setState(() {
-                if (newVal.isEmpty) {
-                  userHours = 0;
-                  _hoursController.value = const TextEditingValue(text: '0');
-                  _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
-                } else {
-                  userHours =  int.parse(newVal) as double;
-                }
-                if (_timer?.isActive ?? false) {
-                  resetTimer();
-                }
-                saveTime(1);
-                _counter = getUserTime();
-              });
-            },
-          ),
-        ),
-      )
-    );
-
-    settings.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 15, 0, 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: const [
-              Text('Minutes'),
-            ],
-          ),
-        )
-    );
-
-    settings.add(
-        RawKeyboardListener(
-          onKey: (RawKeyEvent event) {
-            if (event.runtimeType == RawKeyDownEvent) {
-              bool isChanged = false;
-              setState(() {
-                if (event.logicalKey == LogicalKeyboardKey.arrowUp && userMins < 60) {
-                  setState(() {
-                    userMins += 1;
-                  });
-                  isChanged = true;
-                } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && userMins > 0) {
-                  setState(() {
-                    userMins -= 1;
-                  });
-                  isChanged = true;
-                }
-                if (isChanged) {
-                  saveTime(2);
-                  _minsController.value = TextEditingValue(text: userMins.toStringAsFixed(0));
-                  _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
-                  resetTimer();
-                }
-              });
-            }
-          },
-          focusNode: FocusNode(),
-          child: SizedBox(
-            width: _textFieldWidth,
-            child: TextFormField(
-              controller: _minsController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                // labelText: 'Hours',
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(2),
-              ],
-              onTap: () {
-                _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
-              },
-              onChanged: (newVal) {
-                setState(() {
-                  if (newVal.isEmpty) {
-                    userMins = 0;
-                    _minsController.value = const TextEditingValue(text: '0');
-                    _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
-                  } else if (int.parse(newVal) > 60) {
-                    userHours += 1;
-                    userMins = (int.parse(newVal) as double) - 60;
-                    _hoursController.value = TextEditingValue(text: userHours.toStringAsFixed(0));
-                    _minsController.value = TextEditingValue(text: userMins.toStringAsFixed(0));
-                  } else {
-                    userMins =  int.parse(newVal) as double;
-                  }
-                  if (_timer?.isActive ?? false) {
-                    resetTimer();
-                  }
-                  saveTime(2);
-                  _counter = getUserTime();
-                });
-              },
-            ),
-          ),
-        )
-    );
-
-    settings.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 15, 0, 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: const [
-              Text('Seconds'),
-            ],
-          ),
-        )
-    );
-
-    settings.add(
-        RawKeyboardListener(
-          onKey: (RawKeyEvent event) {
-            if (event.runtimeType == RawKeyDownEvent) {
-              bool isChanged = false;
-              setState(() {
-                if (event.logicalKey == LogicalKeyboardKey.arrowUp && userSecs < 60) {
-                  setState(() {
-                    userSecs += 1;
-                  });
-                  isChanged = true;
-                } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && userSecs > 0) {
-                  setState(() {
-                    userSecs -= 1;
-                  });
-                  isChanged = true;
-                }
-                if (isChanged) {
-                  saveTime(3);
-                  _secsController.value = TextEditingValue(text: userSecs.toStringAsFixed(0));
-                  _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
-                  resetTimer();
-                }
-              });
-            }
-          },
-          focusNode: FocusNode(),
-          child: SizedBox(
-            width: _textFieldWidth,
-            child: TextFormField(
-              controller: _secsController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                // labelText: 'Hours',
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(2),
-              ],
-              onTap: () {
-                _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
-              },
-              onChanged: (newVal) {
-                setState(() {
-                  if (newVal.isEmpty) {
-                    userSecs = 0;
-                    _secsController.value = const TextEditingValue(text: '0');
-                    _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
-                  } else if (int.parse(newVal) > 60) {
-                    userMins += 1;
-                    userSecs = (int.parse(newVal) as double) - 60;
-                    _minsController.value = TextEditingValue(text: userMins.toStringAsFixed(0));
-                    _secsController.value = TextEditingValue(text: userSecs.toStringAsFixed(0));
-                  } else {
-                    userSecs =  int.parse(newVal) as double;
-                  }
-                  if (_timer?.isActive ?? false) {
-                    resetTimer();
-                  }
-                  saveTime(3);
-                  _counter = getUserTime();
-                });
-              },
-            ),
-          ),
-        )
-    );
-
-    settings.add(
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0, 15, 0, 5),
-          child: Row(
-            children: const [
-              Text('Show MS'),
-            ],
-          ),
-        )
-    );
-
-    settings.add(
-      Switch(
-        value: showMilliseconds,
-        onChanged: (newVal) {
-          setState(() {
-            showMilliseconds = newVal;
-          });
-          saveTime(0);
-        },
-      )
-    );
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: settings,
-    );
+  void updateTextFields() {
+    _hoursController.value = TextEditingValue(text: _selectedDuration.inHours.toString());
+    _minsController.value = TextEditingValue(text: (_selectedDuration.inMinutes - (_selectedDuration.inHours * Duration.minutesPerHour)).toString());
+    _secsController.value = TextEditingValue(text: (_selectedDuration.inSeconds - (_selectedDuration.inMinutes * Duration.secondsPerMinute)).toString());
   }
 
   @override
   Widget build(BuildContext context) {
-    const _textSizePercent = 0.6;
-    MediaQueryData _mediaQueryData = MediaQuery.of(context);
-    double _minSize = min(_mediaQueryData.size.width, _mediaQueryData.size.height);
+    List<Widget> controls;
+    if (_ticker.isActive) {
+      controls = [
+        buildPauseButton(onPressed: stopTimer),
+        spacer,
+        buildStopButton(onPressed: resetTimer),
+      ];
+    } else if (_elapsedTime + _previousElapsedTime == Duration.zero) {
+      controls = [
+        buildPlayButton(onPressed: startTimer),
+      ];
+    } else if (_elapsedTime + _previousElapsedTime >= _selectedDuration) {
+      controls = [
+        buildRestartButton(onPressed: restartTimer),
+        spacer,
+        buildStopButton(onPressed: resetTimer),
+      ];
+    } else {
+      controls = [
+        buildPlayButton(onPressed: startTimer),
+        spacer,
+        buildStopButton(onPressed: resetTimer),
+      ];
+    }
+    MediaQueryData mediaQueryData = MediaQuery.of(context);
 
-    return FutureBuilder(
-      future: _data.then((value) {
-        Future.delayed(const Duration(seconds: 10));
-        return value;
-      }),
-      builder: (BuildContext context, AsyncSnapshot<SharedPreferences> snapshot) {
-        if (snapshot.hasData && allDataInitiated()) {
-          return Scaffold(
-            body: Center(
-              child: Row(
-                children: [
-                  DecoratedBox(
-                    decoration: const BoxDecoration(
-                        border: Border(
-                            right: BorderSide(
-                              width: 1,
-                              color: Colors.white70,
-                            )
+    return Scaffold(
+      body: FutureBuilder(
+        future: _data.then((value) => value),
+        builder: (BuildContext context, AsyncSnapshot<SharedPreferences> snapshot) {
+          if (snapshot.hasData) {
+            switch (getScreenType(mediaQueryData.size)) {
+              case ScreenType.desktop:
+                return Scaffold(
+                  body: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
+                        child: SizedBox(
+                          width: mediaQueryData.size.width * 0.05,
+                          child: Column(
+                            children: [
+                              Column(
+                                children: controls,
+                              ),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Hours')),
+                                    RawKeyboardListener(
+                                      onKey: (RawKeyEvent event) {
+                                        if (event.runtimeType == RawKeyDownEvent) {
+                                          bool isChanged = false;
+                                          setState(() {
+                                            if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inHours < maxDuration.inHours) {
+                                              _selectedDuration += const Duration(hours: 1);
+                                              isChanged = true;
+                                            } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inHours > 0) {
+                                              _selectedDuration -= const Duration(hours: 1);
+                                              isChanged = true;
+                                            }
+                                            if (isChanged) {
+                                              resetTimer();
+                                              saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                              updateTextFields();
+                                            }
+                                          });
+                                        }
+                                      },
+                                      focusNode: FocusNode(),
+                                      child: TextFormField(
+                                        controller: _hoursController,
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.digitsOnly,
+                                          LengthLimitingTextInputFormatter(3),
+                                        ],
+                                        onTap: () {
+                                          _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
+                                        },
+                                        onChanged: (newVal) {
+                                          setState(() {
+                                            if (newVal.isEmpty) {
+                                              _selectedDuration -= Duration(hours: _selectedDuration.inHours);
+                                              _hoursController.value = const TextEditingValue(text: '0');
+                                              _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
+                                            } else {
+                                              _selectedDuration = Duration(hours: int.parse(newVal), minutes: int.parse(_minsController.text), seconds: int.parse(_secsController.text));
+                                            }
+                                            resetTimer();
+                                            saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    spacer,
+                                    const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Minutes')),
+                                    RawKeyboardListener(
+                                      onKey: (RawKeyEvent event) {
+                                        if (event.runtimeType == RawKeyDownEvent) {
+                                          bool isChanged = false;
+                                          setState(() {
+                                            if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inMinutes < maxDuration.inMinutes) {
+                                              _selectedDuration += const Duration(minutes: 1);
+                                              isChanged = true;
+                                            } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inMinutes > 0) {
+                                              _selectedDuration -= const Duration(minutes: 1);
+                                              isChanged = true;
+                                            }
+                                            if (isChanged) {
+                                              resetTimer();
+                                              saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                              updateTextFields();
+                                            }
+                                          });
+                                        }
+                                      },
+                                      focusNode: FocusNode(),
+                                      child: TextFormField(
+                                        controller: _minsController,
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.digitsOnly,
+                                          // LengthLimitingTextInputFormatter(2),
+                                        ],
+                                        onTap: () {
+                                          _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
+                                        },
+                                        onChanged: (newVal) {
+                                          setState(() {
+                                            if (newVal.isEmpty) {
+                                              _selectedDuration -= Duration(minutes: _selectedDuration.inMinutes - (_selectedDuration.inHours * Duration.minutesPerHour));
+                                              _minsController.value = const TextEditingValue(text: '0');
+                                              _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
+                                            } else {
+                                              _selectedDuration = Duration(hours: int.parse(_hoursController.text), minutes: int.parse(newVal), seconds: int.parse(_secsController.text));
+                                            }
+                                            resetTimer();
+                                            saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    spacer,
+                                    const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Seconds')),
+                                    RawKeyboardListener(
+                                      onKey: (RawKeyEvent event) {
+                                        if (event.runtimeType == RawKeyDownEvent) {
+                                          bool isChanged = false;
+                                          setState(() {
+                                            if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inSeconds < maxDuration.inSeconds) {
+                                              _selectedDuration += const Duration(seconds: 1);
+                                              isChanged = true;
+                                            } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inSeconds > 0) {
+                                              _selectedDuration -= const Duration(seconds: 1);
+                                              isChanged = true;
+                                            }
+                                            if (isChanged) {
+                                              resetTimer();
+                                              saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                              updateTextFields();
+                                            }
+                                          });
+                                        }
+                                      },
+                                      focusNode: FocusNode(),
+                                      child: TextFormField(
+                                        controller: _secsController,
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.digitsOnly,
+                                          // LengthLimitingTextInputFormatter(2),
+                                        ],
+                                        onTap: () {
+                                          _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
+                                        },
+                                        onChanged: (newVal) {
+                                          setState(() {
+                                            if (newVal.isEmpty) {
+                                              _selectedDuration -= Duration(seconds: _selectedDuration.inSeconds - (_selectedDuration.inMinutes * Duration.secondsPerMinute));
+                                              _secsController.value = const TextEditingValue(text: '0');
+                                              _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
+                                            } else {
+                                              _selectedDuration = Duration(hours: int.parse(_hoursController.text), minutes: int.parse(_minsController.text), seconds: int.parse(newVal));
+                                            }
+                                            resetTimer();
+                                            saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    spacer,
+                                    const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Show MS')),
+                                    Switch(
+                                      value: _showMilliseconds,
+                                      onChanged: (newVal) {
+                                        setState(() {
+                                          _showMilliseconds = newVal;
+                                        });
+                                        _data.then((value) => value.setBool(showMillisecondsLabel, newVal));
+                                      },
+                                    ),
+                                  ]
+                                ),
+                              )
+                            ],
+                          ),
                         )
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SizedBox(
-                        child: buildSidebar(context),
                       ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: SizedBox(
-                        child: buildTime(context),
-                        width: _minSize * _textSizePercent,
-                        height: _minSize * _textSizePercent,
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
-          );
-        } else {
-          return Scaffold(
-            body: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, _minSize * 0.05, 0, 0),
-                      child: SizedBox(
-                        width: _minSize * 0.6,
-                        child: const FittedBox(
-                          fit: BoxFit.contain,
-                          child: Text('Loading Timer'),
+                      Expanded(
+                        child: Center(
+                          child: SizedBox(
+                            width: min(mediaQueryData.size.width, mediaQueryData.size.height) * 0.6,
+                            height: min(mediaQueryData.size.width, mediaQueryData.size.height) * 0.6,
+                            child: buildTimerPainter(
+                              percentage: (_selectedDuration - _elapsedTime - _previousElapsedTime).inMilliseconds / _selectedDuration.inMilliseconds,
+                              timeRemaining: _selectedDuration - _elapsedTime - _previousElapsedTime,
+                              showMilliseconds: _showMilliseconds,
+                            )
+                          ),
                         ),
-                      ),
-                    ),
-                  ]
-                ),
-              ],
-            ),
-          );
-        }
-      },
+                      )
+                    ]
+                  ),
+                );
+              case ScreenType.tablet:
+                return Container();
+              default:
+                return Container();
+            }
+          } else {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+        },
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    _hoursController.dispose();
+    _minsController.dispose();
+    _secsController.dispose();
+    super.dispose();
   }
 }
