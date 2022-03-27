@@ -4,6 +4,7 @@ import 'package:countdown_timer/timer_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum ScreenType {
@@ -21,6 +22,7 @@ ScreenType getScreenType(Size size) {
 }
 
 void main() {
+  setUrlStrategy(PathUrlStrategy());
   runApp(const CountdownTimerApp());
 }
 
