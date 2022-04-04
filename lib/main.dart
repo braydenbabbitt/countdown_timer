@@ -180,7 +180,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                             Padding(
                                 padding: const EdgeInsets.fromLTRB(15, 15, 15, 15),
                                 child: SizedBox(
-                                  width: constraints.biggest.width * 0.05,
+                                  width: 100,
                                   child: Column(
                                     children: [
                                       Column(
@@ -378,9 +378,23 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                       ),
                     );
                   case ScreenType.tablet:
-                    return Container();
+                    return const Center(
+                      child: Text(
+                        "Tablet Layout",
+                        style: TextStyle(
+                          fontSize: 32,
+                        ),
+                      ),
+                    );
                   default:
-                    return Container();
+                    return const Center(
+                      child: Text(
+                        "Mobile Layout",
+                        style: TextStyle(
+                          fontSize: 32,
+                        ),
+                      ),
+                    );
                 }
               },
             );
