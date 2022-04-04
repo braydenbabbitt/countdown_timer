@@ -32,7 +32,7 @@ class CountdownTimerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Countdown Timer',
+      title: 'Countdown Timer | Brayden Babbitt Flutter Projects',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
