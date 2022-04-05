@@ -1,2 +1,2 @@
-build/* linguist-vendored=true
-web/* linguist-vendored=true
+build/** linguist-vendored=true
+web/** linguist-vendored=true
