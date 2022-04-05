@@ -30,9 +30,9 @@ jobs:
         env:
           API_TOKEN_GITHUB: ${{ secrets.CREATE_PR_FOR_BRAYDENBABBITT }}
         with: 
-          source_folder: '/build/web/'
+          source_folder: 'build/web'
           destination_repo: 'braydenbabbitt/braydenbabbitt.com'
-          destination_folder: '/docs/apps/timer'
+          destination_folder: 'docs/apps/timer'
           destination_base_branch: 'master'
           destination_head_branch: 'staging'
           user_email: 'brayden@babbitts.net'
