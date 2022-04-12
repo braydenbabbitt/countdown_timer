@@ -2,8 +2,12 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-Widget buildPlayButton({required void Function() onPressed}) {
+Widget buildPlayButton({required void Function() onPressed, required bool fillWidth}) {
+  Size size = fillWidth ? const Size.fromHeight(40) : const Size(65, 65);
+  OutlinedBorder? shape = fillWidth ? null : const CircleBorder();
+
   return OutlinedButton(
     onPressed: onPressed,
     style: OutlinedButton.styleFrom(
@@ -12,7 +16,8 @@ Widget buildPlayButton({required void Function() onPressed}) {
       ),
       primary: Colors.green,
       padding: const EdgeInsets.all(10),
-      minimumSize: const Size.fromHeight(40),
+      minimumSize: size,
+      shape: shape,
     ),
     child: const Icon(
       Icons.play_arrow,
@@ -20,7 +25,10 @@ Widget buildPlayButton({required void Function() onPressed}) {
   );
 }
 
-Widget buildPauseButton({required void Function() onPressed}) {
+Widget buildPauseButton({required void Function() onPressed, required bool fillWidth}) {
+  Size size = fillWidth ? const Size.fromHeight(40) : const Size(65, 65);
+  OutlinedBorder? shape = fillWidth ? null : const CircleBorder();
+
   return OutlinedButton(
     onPressed: onPressed,
     style: OutlinedButton.styleFrom(
@@ -29,7 +37,8 @@ Widget buildPauseButton({required void Function() onPressed}) {
       ),
       primary: Colors.white70,
       padding: const EdgeInsets.all(10),
-      minimumSize: const Size.fromHeight(40),
+      minimumSize: size,
+      shape: shape,
     ),
     child: const Icon(
       Icons.pause,
@@ -37,7 +46,10 @@ Widget buildPauseButton({required void Function() onPressed}) {
   );
 }
 
-Widget buildStopButton({required void Function() onPressed}) {
+Widget buildStopButton({required void Function() onPressed, required bool fillWidth}) {
+  Size size = fillWidth ? const Size.fromHeight(40) : const Size(65, 65);
+  OutlinedBorder? shape = fillWidth ? null : const CircleBorder();
+
   return OutlinedButton(
     onPressed: onPressed,
     style: OutlinedButton.styleFrom(
@@ -46,7 +58,8 @@ Widget buildStopButton({required void Function() onPressed}) {
       ),
       primary: Colors.red,
       padding: const EdgeInsets.all(10),
-      minimumSize: const Size.fromHeight(40),
+      minimumSize: size,
+      shape: shape,
     ),
     child: const Icon(
       Icons.stop,
@@ -54,7 +67,10 @@ Widget buildStopButton({required void Function() onPressed}) {
   );
 }
 
-Widget buildRestartButton({required void Function() onPressed}) {
+Widget buildRestartButton({required void Function() onPressed, required bool fillWidth}) {
+  Size size = fillWidth ? const Size.fromHeight(40) : const Size(65, 65);
+  OutlinedBorder? shape = fillWidth ? null : const CircleBorder();
+
   return OutlinedButton(
     onPressed: onPressed,
     style: OutlinedButton.styleFrom(
@@ -63,7 +79,8 @@ Widget buildRestartButton({required void Function() onPressed}) {
       ),
       primary: Colors.green,
       padding: const EdgeInsets.all(10),
-      minimumSize: const Size.fromHeight(40),
+      minimumSize: size,
+      shape: shape,
     ),
     child: const Icon(
       Icons.replay,
