@@ -476,6 +476,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     LengthLimitingTextInputFormatter(3),
                                                   ],
                                                   keyboardType: const TextInputType.numberWithOptions(),
+                                                  enableInteractiveSelection: false,
                                                   onTap: () {
                                                     _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
                                                   },
@@ -538,6 +539,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     // LengthLimitingTextInputFormatter(2),
                                                   ],
                                                   keyboardType: const TextInputType.numberWithOptions(),
+                                                  enableInteractiveSelection: false,
                                                   onTap: () {
                                                     _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
                                                   },
@@ -600,6 +602,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     // LengthLimitingTextInputFormatter(2),
                                                   ],
                                                   keyboardType: const TextInputType.numberWithOptions(),
+                                                  enableInteractiveSelection: false,
                                                   onTap: () {
                                                     _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
                                                   },
@@ -627,16 +630,19 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Show MS')),
-                                          Switch(
-                                            activeColor: Colors.deepPurple,
-                                            activeTrackColor: Colors.deepPurpleAccent,
-                                            value: _showMilliseconds,
-                                            onChanged: (newVal) {
-                                              setState(() {
-                                                _showMilliseconds = newVal;
-                                              });
-                                              _data.then((value) => value.setBool(showMillisecondsLabel, newVal));
-                                            },
+                                          SizedBox(
+                                            height: 40,
+                                            child: Switch(
+                                              activeColor: Colors.deepPurple,
+                                              activeTrackColor: Colors.deepPurpleAccent,
+                                              value: _showMilliseconds,
+                                              onChanged: (newVal) {
+                                                setState(() {
+                                                  _showMilliseconds = newVal;
+                                                });
+                                                _data.then((value) => value.setBool(showMillisecondsLabel, newVal));
+                                              },
+                                            ),
                                           ),
                                         ],
                                       ),
