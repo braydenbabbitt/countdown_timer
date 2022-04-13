@@ -475,6 +475,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     FilteringTextInputFormatter.digitsOnly,
                                                     LengthLimitingTextInputFormatter(3),
                                                   ],
+                                                  keyboardType: const TextInputType.numberWithOptions(),
                                                   onTap: () {
                                                     _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
                                                   },
@@ -536,6 +537,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     FilteringTextInputFormatter.digitsOnly,
                                                     // LengthLimitingTextInputFormatter(2),
                                                   ],
+                                                  keyboardType: const TextInputType.numberWithOptions(),
                                                   onTap: () {
                                                     _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
                                                   },
@@ -597,6 +599,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     FilteringTextInputFormatter.digitsOnly,
                                                     // LengthLimitingTextInputFormatter(2),
                                                   ],
+                                                  keyboardType: const TextInputType.numberWithOptions(),
                                                   onTap: () {
                                                     _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
                                                   },
