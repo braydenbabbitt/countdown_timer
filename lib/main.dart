@@ -476,7 +476,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     LengthLimitingTextInputFormatter(3),
                                                   ],
                                                   keyboardType: const TextInputType.numberWithOptions(),
-                                                  enableInteractiveSelection: false,
+                                                  toolbarOptions: const ToolbarOptions(copy: true, cut: false, paste: true, selectAll: false),
                                                   onTap: () {
                                                     _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
                                                   },
@@ -539,7 +539,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     // LengthLimitingTextInputFormatter(2),
                                                   ],
                                                   keyboardType: const TextInputType.numberWithOptions(),
-                                                  enableInteractiveSelection: false,
+                                                  toolbarOptions: const ToolbarOptions(copy: true, cut: false, paste: true, selectAll: false),
                                                   onTap: () {
                                                     _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
                                                   },
@@ -602,7 +602,7 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                                     // LengthLimitingTextInputFormatter(2),
                                                   ],
                                                   keyboardType: const TextInputType.numberWithOptions(),
-                                                  enableInteractiveSelection: false,
+                                                  toolbarOptions: const ToolbarOptions(copy: true, cut: false, paste: true, selectAll: false),
                                                   onTap: () {
                                                     _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
                                                   },
