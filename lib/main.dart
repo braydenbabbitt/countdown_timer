@@ -411,8 +411,8 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                               child: AspectRatio(
                                 aspectRatio: 1,
                                 child: FractionallySizedBox(
-                                  widthFactor: 0.65,
-                                  heightFactor: 0.65,
+                                  widthFactor: 0.8,
+                                  heightFactor: 0.8,
                                   child: buildTimerPainter(
                                     percentage: (_selectedDuration - _elapsedTime - _previousElapsedTime).inMilliseconds / _selectedDuration.inMilliseconds,
                                     timeRemaining: _selectedDuration - _elapsedTime - _previousElapsedTime,
@@ -437,184 +437,187 @@ class _CountdownTimerHomePageState extends State<CountdownTimerHomePage> with Si
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Hours')),
-                                          RawKeyboardListener(
-                                            onKey: (RawKeyEvent event) {
-                                              if (event.runtimeType == RawKeyDownEvent) {
-                                                bool isChanged = false;
-                                                setState(() {
-                                                  if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inHours < maxDuration.inHours) {
-                                                    _selectedDuration += const Duration(hours: 1);
-                                                    isChanged = true;
-                                                  } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inHours > 0) {
-                                                    _selectedDuration -= const Duration(hours: 1);
-                                                    isChanged = true;
-                                                  }
-                                                  if (isChanged) {
-                                                    resetTimer();
-                                                    saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
-                                                    updateTextFields();
-                                                  }
-                                                });
-                                              }
-                                            },
-                                            focusNode: FocusNode(),
-                                            child: SizedBox(
-                                              width: 80,
-                                              height: 40,
-                                              child: TextFormField(
-                                                controller: _hoursController,
-                                                decoration: const InputDecoration(
-                                                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-                                                  border: OutlineInputBorder(),
-                                                ),
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter.digitsOnly,
-                                                  LengthLimitingTextInputFormatter(3),
-                                                ],
-                                                onTap: () {
-                                                  _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
-                                                },
-                                                onChanged: (newVal) {
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Hours')),
+                                            RawKeyboardListener(
+                                              onKey: (RawKeyEvent event) {
+                                                if (event.runtimeType == RawKeyDownEvent) {
+                                                  bool isChanged = false;
                                                   setState(() {
-                                                    if (newVal.isEmpty) {
-                                                      _selectedDuration -= Duration(hours: _selectedDuration.inHours);
-                                                      _hoursController.value = const TextEditingValue(text: '0');
-                                                      _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
-                                                    } else {
-                                                      _selectedDuration = Duration(hours: int.parse(newVal), minutes: int.parse(_minsController.text), seconds: int.parse(_secsController.text));
+                                                    if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inHours < maxDuration.inHours) {
+                                                      _selectedDuration += const Duration(hours: 1);
+                                                      isChanged = true;
+                                                    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inHours > 0) {
+                                                      _selectedDuration -= const Duration(hours: 1);
+                                                      isChanged = true;
                                                     }
-                                                    resetTimer();
-                                                    saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                    if (isChanged) {
+                                                      resetTimer();
+                                                      saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                      updateTextFields();
+                                                    }
                                                   });
-                                                },
+                                                }
+                                              },
+                                              focusNode: FocusNode(),
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: TextFormField(
+                                                  controller: _hoursController,
+                                                  decoration: const InputDecoration(
+                                                    contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                                                    border: OutlineInputBorder(),
+                                                  ),
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    LengthLimitingTextInputFormatter(3),
+                                                  ],
+                                                  onTap: () {
+                                                    _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
+                                                  },
+                                                  onChanged: (newVal) {
+                                                    setState(() {
+                                                      if (newVal.isEmpty) {
+                                                        _selectedDuration -= Duration(hours: _selectedDuration.inHours);
+                                                        _hoursController.value = const TextEditingValue(text: '0');
+                                                        _hoursController.selection = TextSelection(baseOffset: 0, extentOffset: _hoursController.text.length);
+                                                      } else {
+                                                        _selectedDuration = Duration(hours: int.parse(newVal), minutes: int.parse(_minsController.text), seconds: int.parse(_secsController.text));
+                                                      }
+                                                      resetTimer();
+                                                      saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                    });
+                                                  },
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                       spacer,
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Minutes')),
-                                          RawKeyboardListener(
-                                            onKey: (RawKeyEvent event) {
-                                              if (event.runtimeType == RawKeyDownEvent) {
-                                                bool isChanged = false;
-                                                setState(() {
-                                                  if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inMinutes < maxDuration.inMinutes) {
-                                                    _selectedDuration += const Duration(minutes: 1);
-                                                    isChanged = true;
-                                                  } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inMinutes > 0) {
-                                                    _selectedDuration -= const Duration(minutes: 1);
-                                                    isChanged = true;
-                                                  }
-                                                  if (isChanged) {
-                                                    resetTimer();
-                                                    saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
-                                                    updateTextFields();
-                                                  }
-                                                });
-                                              }
-                                            },
-                                            focusNode: FocusNode(),
-                                            child: SizedBox(
-                                              width: 80,
-                                              height: 40,
-                                              child: TextFormField(
-                                                controller: _minsController,
-                                                decoration: const InputDecoration(
-                                                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-                                                  border: OutlineInputBorder(),
-                                                ),
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter.digitsOnly,
-                                                  // LengthLimitingTextInputFormatter(2),
-                                                ],
-                                                onTap: () {
-                                                  _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
-                                                },
-                                                onChanged: (newVal) {
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Minutes')),
+                                            RawKeyboardListener(
+                                              onKey: (RawKeyEvent event) {
+                                                if (event.runtimeType == RawKeyDownEvent) {
+                                                  bool isChanged = false;
                                                   setState(() {
-                                                    if (newVal.isEmpty) {
-                                                      _selectedDuration -= Duration(minutes: _selectedDuration.inMinutes - (_selectedDuration.inHours * Duration.minutesPerHour));
-                                                      _minsController.value = const TextEditingValue(text: '0');
-                                                      _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
-                                                    } else {
-                                                      _selectedDuration = Duration(hours: int.parse(_hoursController.text), minutes: int.parse(newVal), seconds: int.parse(_secsController.text));
+                                                    if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inMinutes < maxDuration.inMinutes) {
+                                                      _selectedDuration += const Duration(minutes: 1);
+                                                      isChanged = true;
+                                                    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inMinutes > 0) {
+                                                      _selectedDuration -= const Duration(minutes: 1);
+                                                      isChanged = true;
                                                     }
-                                                    resetTimer();
-                                                    saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                    if (isChanged) {
+                                                      resetTimer();
+                                                      saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                      updateTextFields();
+                                                    }
                                                   });
-                                                },
+                                                }
+                                              },
+                                              focusNode: FocusNode(),
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: TextFormField(
+                                                  controller: _minsController,
+                                                  decoration: const InputDecoration(
+                                                    contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                                                    border: OutlineInputBorder(),
+                                                  ),
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    // LengthLimitingTextInputFormatter(2),
+                                                  ],
+                                                  onTap: () {
+                                                    _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
+                                                  },
+                                                  onChanged: (newVal) {
+                                                    setState(() {
+                                                      if (newVal.isEmpty) {
+                                                        _selectedDuration -= Duration(minutes: _selectedDuration.inMinutes - (_selectedDuration.inHours * Duration.minutesPerHour));
+                                                        _minsController.value = const TextEditingValue(text: '0');
+                                                        _minsController.selection = TextSelection(baseOffset: 0, extentOffset: _minsController.text.length);
+                                                      } else {
+                                                        _selectedDuration = Duration(hours: int.parse(_hoursController.text), minutes: int.parse(newVal), seconds: int.parse(_secsController.text));
+                                                      }
+                                                      resetTimer();
+                                                      saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                    });
+                                                  },
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                       spacer,
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Seconds')),
-                                          RawKeyboardListener(
-                                            onKey: (RawKeyEvent event) {
-                                              if (event.runtimeType == RawKeyDownEvent) {
-                                                bool isChanged = false;
-                                                setState(() {
-                                                  if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inSeconds < maxDuration.inSeconds) {
-                                                    _selectedDuration += const Duration(seconds: 1);
-                                                    isChanged = true;
-                                                  } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inSeconds > 0) {
-                                                    _selectedDuration -= const Duration(seconds: 1);
-                                                    isChanged = true;
-                                                  }
-                                                  if (isChanged) {
-                                                    resetTimer();
-                                                    saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
-                                                    updateTextFields();
-                                                  }
-                                                });
-                                              }
-                                            },
-                                            focusNode: FocusNode(),
-                                            child: SizedBox(
-                                              width: 80,
-                                              height: 40,
-                                              child: TextFormField(
-                                                controller: _secsController,
-                                                decoration: const InputDecoration(
-                                                  contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-                                                  border: OutlineInputBorder(),
-                                                ),
-                                                inputFormatters: [
-                                                  FilteringTextInputFormatter.digitsOnly,
-                                                  // LengthLimitingTextInputFormatter(2),
-                                                ],
-                                                onTap: () {
-                                                  _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
-                                                },
-                                                onChanged: (newVal) {
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Padding(padding: EdgeInsets.fromLTRB(0, 0, 0, 5), child: Text('Seconds')),
+                                            RawKeyboardListener(
+                                              onKey: (RawKeyEvent event) {
+                                                if (event.runtimeType == RawKeyDownEvent) {
+                                                  bool isChanged = false;
                                                   setState(() {
-                                                    if (newVal.isEmpty) {
-                                                      _selectedDuration -= Duration(seconds: _selectedDuration.inSeconds - (_selectedDuration.inMinutes * Duration.secondsPerMinute));
-                                                      _secsController.value = const TextEditingValue(text: '0');
-                                                      _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
-                                                    } else {
-                                                      _selectedDuration = Duration(hours: int.parse(_hoursController.text), minutes: int.parse(_minsController.text), seconds: int.parse(newVal));
+                                                    if (event.logicalKey == LogicalKeyboardKey.arrowUp && _selectedDuration.inSeconds < maxDuration.inSeconds) {
+                                                      _selectedDuration += const Duration(seconds: 1);
+                                                      isChanged = true;
+                                                    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown && _selectedDuration.inSeconds > 0) {
+                                                      _selectedDuration -= const Duration(seconds: 1);
+                                                      isChanged = true;
                                                     }
-                                                    resetTimer();
-                                                    saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                    if (isChanged) {
+                                                      resetTimer();
+                                                      saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                      updateTextFields();
+                                                    }
                                                   });
-                                                },
+                                                }
+                                              },
+                                              focusNode: FocusNode(),
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: TextFormField(
+                                                  controller: _secsController,
+                                                  decoration: const InputDecoration(
+                                                    contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                                                    border: OutlineInputBorder(),
+                                                  ),
+                                                  inputFormatters: [
+                                                    FilteringTextInputFormatter.digitsOnly,
+                                                    // LengthLimitingTextInputFormatter(2),
+                                                  ],
+                                                  onTap: () {
+                                                    _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
+                                                  },
+                                                  onChanged: (newVal) {
+                                                    setState(() {
+                                                      if (newVal.isEmpty) {
+                                                        _selectedDuration -= Duration(seconds: _selectedDuration.inSeconds - (_selectedDuration.inMinutes * Duration.secondsPerMinute));
+                                                        _secsController.value = const TextEditingValue(text: '0');
+                                                        _secsController.selection = TextSelection(baseOffset: 0, extentOffset: _secsController.text.length);
+                                                      } else {
+                                                        _selectedDuration = Duration(hours: int.parse(_hoursController.text), minutes: int.parse(_minsController.text), seconds: int.parse(newVal));
+                                                      }
+                                                      resetTimer();
+                                                      saveTime(label: selectedDurationLabel, toSave: _selectedDuration);
+                                                    });
+                                                  },
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ]
+                                          ]
+                                        ),
                                       ),
                                       spacer,
                                       Column(
