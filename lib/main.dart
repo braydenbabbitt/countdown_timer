@@ -37,8 +37,8 @@ class CountdownTimerApp extends StatelessWidget {
         textTheme: GoogleFonts.robotoTextTheme(
           Theme.of(context).textTheme,
         ),
-        // TODO: Handle light theme
-        brightness: Brightness.dark,
+        // TODO: Handle light theme better
+        brightness: Brightness.light,
       ),
       darkTheme: ThemeData(
         primarySwatch: Colors.blue,
