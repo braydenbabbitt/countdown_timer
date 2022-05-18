@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 enum ScreenType {
   mobile, desktop
@@ -33,6 +34,9 @@ class CountdownTimerApp extends StatelessWidget {
       title: 'Countdown Timer | Brayden Babbitt Flutter Projects',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        textTheme: GoogleFonts.robotoTextTheme(
+          Theme.of(context).textTheme,
+        ),
       ),
       darkTheme: ThemeData(
         primarySwatch: Colors.blue,
