@@ -38,13 +38,10 @@ class CountdownTimerApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
         // TODO: Handle light theme better
-        brightness: Brightness.light,
+        // brightness: Brightness.light,
       ),
       darkTheme: ThemeData(
         primarySwatch: Colors.blue,
-        textTheme: GoogleFonts.robotoTextTheme(
-          Theme.of(context).textTheme,
-        ),
         brightness: Brightness.dark,
       ),
       home: const CountdownTimerHomePage(title: 'Timer Page'),
